@@ -14,7 +14,9 @@ import os
 
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = "8BYkEfBA6O6donzWlSihBXox7C0sKR6b"
 ckeditor = CKEditor(app)
 Bootstrap(app)
 gravatar = Gravatar(app, size=100, rating='g',
@@ -127,6 +129,7 @@ def login():
             return redirect(url_for('login'))
         else:
             login_user(user)
+            print(user.id)
             return redirect(url_for("get_all_posts"))
 
     return render_template("login.html", form=form)
@@ -190,7 +193,7 @@ def add_new_post():
 
 
 
-@app.route("/edit-post/<int:post_id>")
+@app.route("/edit-post/<int:post_id>", methods=["GET","POST"])
 @admin_only
 def edit_post(post_id):
     post = BlogPost.query.get(post_id)
@@ -198,14 +201,14 @@ def edit_post(post_id):
         title=post.title,
         subtitle=post.subtitle,
         img_url=post.img_url,
-        author=post.author,
+        author=current_user,
         body=post.body
     )
     if edit_form.validate_on_submit():
         post.title = edit_form.title.data
         post.subtitle = edit_form.subtitle.data
         post.img_url = edit_form.img_url.data
-        post.author = edit_form.author.data
+        post.author = current_user
         post.body = edit_form.body.data
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
@@ -213,7 +216,7 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form)
 
 
-@app.route("/delete/<int:post_id>", methods=["DELETE"])
+@app.route("/delete/<int:post_id>", methods=["GET","DELETE"])
 @admin_only
 def delete_post(post_id):
     post_to_delete = BlogPost.query.get(post_id)
